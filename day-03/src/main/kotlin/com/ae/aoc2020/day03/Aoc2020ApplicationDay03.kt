@@ -21,6 +21,19 @@ class Aoc2020ApplicationDay03 : CommandLineRunner {
 
 		fun height() = map.size
 		
+		fun slopeCostYinc(xInc: Int) = (0 until height()).map {
+			y ->
+			if (isTree(y * xInc, y))
+				1
+			else 0
+		}.sum()
+
+		fun sloperCostXinc(yInc: Int) = (0 until height() / yInc).map {
+			x ->
+			if (isTree(x, x * yInc))
+				1
+			else 0
+		}.sum()
 	}
 
 	private fun solve1(totalFile: String) {
@@ -43,10 +56,24 @@ class Aoc2020ApplicationDay03 : CommandLineRunner {
 		}
 	}
 
+	private fun solve2(totalFile: String) {
+		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay03::class.java.getResourceAsStream("/$totalFile")))
+		val map = HashMap<Int, String>()
+		bufferedReader.useLines {
+			it.withIndex().forEach {line ->
+				map[line.index] = line.value
+			}
+			val localGeology = LocalGeology(map)
+			val xslopes = listOf(1, 3, 5, 7)
+			val value : Int = xslopes.map { localGeology.slopeCostYinc(it) }.reduce { acc, i ->  acc * i }
+			logger.info("The final outcome = ${value * (localGeology.sloperCostXinc(2))}")
+		}
+	}
+
 
 	override fun run(vararg args: String?) {
 		solve1(args[0]!!)
-//		solve2(args[0]!!)
+		solve2(args[0]!!)
 	}
 }
 
