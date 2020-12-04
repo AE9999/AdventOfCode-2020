@@ -26,6 +26,39 @@ class Aoc2020ApplicationDay04 : CommandLineRunner {
 			val requiredIs = listOf("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid")
 			return requiredIs.map { id -> if (map.containsKey(id)) 1 else 0  }.sum() == requiredIs.size
 		}
+
+		fun valid2() : Boolean {
+			val requiredIs = listOf("byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid")
+			requiredIs.forEach {key ->
+				val value = map[key]!!
+				val validInput: Boolean = when (key) {
+					"byr" -> Regex("\\d{4}").matchEntire(value) != null && value.toInt() in 1920..2002
+					"iyr" -> Regex("\\d{4}").matchEntire(value) != null && value.toInt() in 2010..2020
+					"eyr" -> Regex("\\d{4}").matchEntire(value) != null && value.toInt() in 2020..2030
+					"hgt" ->
+						when {
+							Regex("(\\d+)cm").matchEntire(value) != null -> {
+								val (value: String) = Regex("(\\d+)cm").matchEntire(value)!!.destructured
+								value.toInt() in 150..193
+							}
+							Regex("(\\d+)in").matchEntire(value) != null -> {
+								val (value: String) = Regex("(\\d+)in").matchEntire(value)!!.destructured
+								value.toInt() in 59..76
+							}
+							else -> false
+						}
+					"hcl" -> Regex("#[0-9a-f]{6}").matchEntire(value) != null
+					"ecl" -> listOf("amb", "blu", "brn", "gry", "grn", "hzl", "oth").contains(value)
+					"pid" -> Regex("\\d{9}").matchEntire(value) != null
+					"cid" -> true
+					else -> true
+				}
+				if (!validInput) {
+					return false
+				}
+			}
+			return true
+		}
 	}
 
 	private fun readPassports(it: Sequence<String>): List<Passport> {
@@ -52,7 +85,6 @@ class Aoc2020ApplicationDay04 : CommandLineRunner {
 
 	private fun solve1(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay04::class.java.getResourceAsStream("/$totalFile")))
-
 		bufferedReader.useLines {
 			 val passports  = readPassports(it)
 			  logger.info("My file contains ${passports.filter { it.valid() }.size} valid passports")
@@ -61,9 +93,9 @@ class Aoc2020ApplicationDay04 : CommandLineRunner {
 
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay04::class.java.getResourceAsStream("/$totalFile")))
-		val map = HashMap<Int, String>()
 		bufferedReader.useLines {
-
+			val passports  = readPassports(it)
+			logger.info("My file contains ${passports.filter { it.valid() && it.valid2() }.size} valid passports with valid values")
 		}
 	}
 
