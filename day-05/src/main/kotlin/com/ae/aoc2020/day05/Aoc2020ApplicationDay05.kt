@@ -60,12 +60,18 @@ class Aoc2020ApplicationDay05 : CommandLineRunner {
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay05::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines {
+			val ids = it.map { line -> BoardingPass(line) }.map { it.id() }.toSet()
+			(0 until (127 * 8) + 7).forEach {  id ->
+				if (!ids.contains(id) && ids.contains(id-1) && ids.contains(id+1)) {
+					logger.info("${id} is empty but ${id +1} and ${id -1} are not ..")
+				}
+			}
 		}
 	}
 
 	override fun run(vararg args: String?) {
 		solve1(args[0]!!)
-//		solve2(args[0]!!)
+		solve2(args[0]!!)
 	}
 }
 
