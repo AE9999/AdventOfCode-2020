@@ -28,6 +28,12 @@ class Aoc2020ApplicationDay07 : CommandLineRunner {
 			}
 			return 0
 		}
+
+		fun bagsNeededInsideMe(id2Bag: Map<Pair<String,String>, Bag>) : Int {
+			return bagRequirements.map { bagRequirement ->
+				(bagRequirement.amount * (1 + id2Bag[bagRequirement.id]!!.bagsNeededInsideMe(id2Bag)))
+			}.sum()
+		}
 	}
 
 	private fun parseBagLine(line: String) : Bag {
@@ -57,6 +63,12 @@ class Aoc2020ApplicationDay07 : CommandLineRunner {
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay07::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines {
+			val bags = it.map { line -> parseBagLine(line) }.toList()
+			val id2Bag = bags.map { bag -> Pair(bag.id, bag) }.toMap()
+			val sum = bags.filter { it.id == Pair("shiny", "gold") } // We only need the answer for this one
+					      .map { bag -> bag.bagsNeededInsideMe(id2Bag) }
+					      .sum()
+			logger.info("$sum individual bags are required inside your single shiny gold bag")
 		}
 	}
 
