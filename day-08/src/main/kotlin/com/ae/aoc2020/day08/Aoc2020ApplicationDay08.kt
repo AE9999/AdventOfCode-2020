@@ -1,4 +1,4 @@
-package com.ae.aoc2019.day08
+package com.ae.aoc2020.day08
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
