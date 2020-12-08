@@ -14,7 +14,19 @@ class Aoc2020ApplicationDay08 : CommandLineRunner {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	data class Instruction(val operation : String, val argument: Int)
+	data class Instruction(val operation : String, val argument: Int) {
+		fun flip() : Instruction {
+			val newOperation = when(operation) {
+				"acc" -> "acc"
+				"jmp" -> "nop"
+				"nop" -> "jmp"
+				else -> {
+					throw IllegalStateException("Should not have reached")
+				}
+			}
+			return Instruction(newOperation, argument)
+		}
+	}
 
 	data class Program(val instruction: List<Instruction>) {
 		var acc = 0
@@ -46,6 +58,18 @@ class Aoc2020ApplicationDay08 : CommandLineRunner {
 			}
 			return acc
 		}
+
+		fun runUtilEndOrRepeat() : Pair<Boolean, Int> {
+			val runInstructions = HashSet<Int>()
+			while (!runInstructions.contains(pc)) {
+				runInstructions.add(pc)
+				step()
+				if (pc == instruction.size) {
+					return Pair(true, acc)
+				}
+			}
+			return Pair(false, acc)
+		}
 	}
 
 	private fun parseProgram(input: Sequence<String>) : Program {
@@ -67,6 +91,20 @@ class Aoc2020ApplicationDay08 : CommandLineRunner {
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay08::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines {
+			val originalInstructions = it.map { line ->
+				val (operation, sign, operand) = Regex("(\\w+) ([\\+-])(\\d+)").find(line)!!.destructured
+				Instruction(operation, (if (sign == "-") -1 else 1) * operand.toInt())
+		    }.toList()
+
+			(originalInstructions.indices).forEach lit@{ index ->
+				if (originalInstructions[index].operation == "acc") return@lit
+				val newInstructions = originalInstructions.toMutableList()
+				newInstructions[index] = newInstructions[index].flip()
+				val result = Program(newInstructions).runUtilEndOrRepeat()
+				if (result.first) {
+					logger.info("${result.second} is the value of the accumulator after the program terminates.")
+				}
+			}
 		}
 	}
 
