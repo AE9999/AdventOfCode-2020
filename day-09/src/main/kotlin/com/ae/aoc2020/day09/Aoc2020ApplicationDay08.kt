@@ -38,6 +38,24 @@ class Aoc2020ApplicationDay09 : CommandLineRunner {
 			}
 			return -1
 		}
+
+		fun findProofOfContiniousSet(inValidNumber: Long): Pair<Long, Long> {
+			var lb = 0
+			while (lb < input.size) {
+				var i = 1
+				var acc = input[lb]
+				while(acc <= inValidNumber) {
+					acc += input[lb + i]
+					if (acc == inValidNumber) {
+						val set = input.subList(lb, lb + i + 1)
+						return Pair(set.min()!!, set.max()!!)
+					}
+					i += 1
+				}
+				lb++
+			}
+			return Pair(-1, -1)
+		}
 	}
 
 	private fun solve1(totalFile: String, windowSize: Int) {
@@ -48,15 +66,19 @@ class Aoc2020ApplicationDay09 : CommandLineRunner {
 		}
 	}
 
-	private fun solve2(totalFile: String) {
+	private fun solve2(totalFile: String, windowSize: Int) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay09::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines {
+			val xMas = XMAS(it.map { it.toLong() }.toList(), windowSize)
+			val inValidNumber = xMas.findFirstIncorrectNumber()
+			val result = xMas.findProofOfContiniousSet(inValidNumber)
+			logger.info("${result.first + result.second} is the encryption weakness in your XMAS-encrypted list of numbers")
 		}
 	}
 
 	override fun run(vararg args: String?) {
 		solve1(args[0]!!, args[1]!!.toInt())
-		solve2(args[0]!!)
+		solve2(args[0]!!, args[1]!!.toInt())
 	}
 }
 
