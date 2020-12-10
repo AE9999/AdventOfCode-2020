@@ -43,6 +43,15 @@ class Aoc2020ApplicationDay10 : CommandLineRunner {
 		return null
 	}
 
+	fun findRearrangements(target: Int, adapters: Set<Adapter>, chainedAdapters: List<Adapter>) : Int {
+		return adapters.filter { it.outputJoltage < target && it.outputJoltage + 3 >= target }.map { adapter ->
+			if (adapter.outputJoltage == 0)
+				1
+			else findRearrangements(adapter.outputJoltage, adapters.minus(adapter),
+					   chainedAdapters + adapter)
+		}.sum()
+	}
+
 	private fun solve1(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay10::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines {
@@ -62,6 +71,28 @@ class Aoc2020ApplicationDay10 : CommandLineRunner {
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay10::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines {
+			val adapters = it.map { line -> Adapter(line.toInt()) }.toList()
+			val begin =  Adapter(0)
+			val end = Adapter(adapters.map { it.outputJoltage }.max()!! + 3)
+			val matchedAdapters = (findMatchedAdapters(adapters.toSet(), listOf(begin))!!
+					               + end)
+			val joltage2Reachable = matchedAdapters.map { adapter ->
+				                  val reachable = matchedAdapters.filter { otherAdapter -> otherAdapter.outputJoltage < adapter.outputJoltage
+										                                   && otherAdapter.outputJoltage + 3 >= adapter.outputJoltage }.toList()
+				                  Pair(adapter, reachable)
+			}.toMap()
+
+			val adapter2score = HashMap<Adapter, Long>()
+			matchedAdapters.withIndex().forEach {
+				if(it.index == 0) {
+					adapter2score[it.value] = 1L
+				} else {
+					adapter2score[it.value] = joltage2Reachable[it.value]!!.map { origAdapter ->
+						adapter2score[origAdapter]!!
+					}.sum()
+				}
+			}
+			logger.info("Final result ${adapter2score[end]!!}")
 		}
 	}
 
