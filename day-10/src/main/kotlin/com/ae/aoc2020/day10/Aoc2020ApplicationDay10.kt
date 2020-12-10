@@ -1,4 +1,4 @@
-package com.ae.aoc2020.day08
+package com.ae.aoc2020.day10
 
 import org.slf4j.LoggerFactory
 import org.springframework.boot.CommandLineRunner
@@ -8,7 +8,6 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.math.abs
 
-
 @SpringBootApplication
 class Aoc2020ApplicationDay10 : CommandLineRunner {
 
@@ -16,7 +15,6 @@ class Aoc2020ApplicationDay10 : CommandLineRunner {
 
 	data class Adapter(val outputJoltage: Int) {
 		fun inputRange() = (outputJoltage-3..outputJoltage)
-
 	}
 
 	fun findMatchedAdapters(availableAdapters: Set<Adapter>,
@@ -41,15 +39,6 @@ class Aoc2020ApplicationDay10 : CommandLineRunner {
 		}
 		logger.info("Refuted $currentOutputJoltage -> linked:${linkedAdapters}, available:${availableAdapters} ..")
 		return null
-	}
-
-	fun findRearrangements(target: Int, adapters: Set<Adapter>, chainedAdapters: List<Adapter>) : Int {
-		return adapters.filter { it.outputJoltage < target && it.outputJoltage + 3 >= target }.map { adapter ->
-			if (adapter.outputJoltage == 0)
-				1
-			else findRearrangements(adapter.outputJoltage, adapters.minus(adapter),
-					   chainedAdapters + adapter)
-		}.sum()
 	}
 
 	private fun solve1(totalFile: String) {
