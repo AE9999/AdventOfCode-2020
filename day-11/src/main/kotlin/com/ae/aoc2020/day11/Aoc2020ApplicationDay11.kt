@@ -15,8 +15,6 @@ class Aoc2020ApplicationDay11 : CommandLineRunner {
 
 	data class SeatingSystem(var rows: List<String>) {
 
-		private val logger = LoggerFactory.getLogger(javaClass)
-
 		fun height() = rows.size
 
 		fun width() = rows[0].length
@@ -64,8 +62,7 @@ class Aoc2020ApplicationDay11 : CommandLineRunner {
 			}
 		}
 
-		fun occupiedSeats() =
-			rows.map { it.filter { it == '#' }.length }.sum()
+		fun occupiedSeats() = rows.map { it.filter { it == '#' }.length }.sum()
 
 		fun step() {
 			val nextState = rows.indices.map { y ->
@@ -96,15 +93,6 @@ class Aoc2020ApplicationDay11 : CommandLineRunner {
 			}.toList()
 			rows = nextState
 		}
-
-
-		fun dump() {
-			logger.info("STARTING DUMP..")
-			rows.forEach {
-					logger.info(it)
-			}
-			logger.info("Finished DUMP..")
-		}
 	}
 
 	private fun solve1(totalFile: String) {
@@ -118,7 +106,6 @@ class Aoc2020ApplicationDay11 : CommandLineRunner {
 				seatingSystem.step()
 			}
 			logger.info("${occupiedSeats} seats end up occupied")
-
 		}
 	}
 
