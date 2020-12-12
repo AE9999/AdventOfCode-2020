@@ -8,18 +8,17 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.RuntimeException
 import kotlin.math.abs
+import kotlin.math.cos
+import kotlin.math.sin
 
 @SpringBootApplication
 class Aoc2020ApplicationDay12 : CommandLineRunner {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	data class NavigationState(val navigationInstractions: List<String>) {
-		var direction = 'E'
-		val steeringDirections = listOf('L', 'R')
-		var myX = 0
-		var myY = 0
+	val steeringDirections = listOf('L', 'R')
 
+	inner class NavigationState(val navigationInstractions: List<String>) {
 		var lDirections = mapOf(
 				'N' to listOf('W', 'S', 'E', 'N'),
 				'W' to listOf('S', 'E', 'N', 'W'),
@@ -32,6 +31,10 @@ class Aoc2020ApplicationDay12 : CommandLineRunner {
 				'S' to listOf('W', 'N', 'E', 'S'),
 				'W' to listOf('N', 'E', 'S', 'W')
 		)
+
+		var direction = 'E'
+		var myX = 0
+		var myY = 0
 
 		fun updateStuff(direction: Char, distance: Int) {
 			when (direction) {
@@ -57,17 +60,62 @@ class Aoc2020ApplicationDay12 : CommandLineRunner {
 			}
 		}
 
-
 		fun run() {
-			navigationInstractions.forEach {
-				step(it)
+			navigationInstractions.forEach { step(it) }
+		}
+
+		fun distance() = abs(myX) + abs(myY)
+	}
+
+	inner class WaypointNavigationState(val navigationInstractions: List<String>) {
+
+		var location = Pair(0, 0)
+
+		var wayPointLocation = Pair(10, 1)
+
+		private operator fun Pair<Int, Int>.plus(pair: Pair<Int, Int>) : Pair<Int, Int> {
+			return Pair(first + pair.first, second + pair.second)
+		}
+
+		private operator fun Pair<Int, Int>.times(amount: Int): Pair<Int, Int> {
+			return Pair(first * amount, second * amount)
+		}
+
+		private fun Pair<Int, Int>.abs(): Int {
+			return abs(first) + abs(second)
+		}
+
+		// I Fucking hate rotation matrices, I hate radials. I really, really do ..
+		fun rotationStuff(degree: Int, x: Int, y: Int) : Pair<Int, Int> {
+			val degree_ = Math.toRadians(degree.toDouble())
+			val x_ =  (x * cos(degree_).toInt())  - (sin(degree_).toInt() * y)
+			val y_ =  (x * sin(degree_).toInt())  + (cos(degree_).toInt() * y)
+			return Pair(x_, y_)
+		}
+
+		fun step(instruction: String) {
+			val distance = instruction.drop(1).toInt()
+			val directionInstruction = instruction[0]
+
+			if (steeringDirections.contains(directionInstruction)) {
+				val degree = distance * (if (directionInstruction == 'R') -1 else 1)
+				wayPointLocation  = rotationStuff(degree, wayPointLocation.first, wayPointLocation.second)
+			} else {
+				when (directionInstruction) {
+					'N' -> wayPointLocation += Pair(0, distance)
+					'S' -> wayPointLocation += Pair(0, -distance)
+					'E' -> wayPointLocation += Pair(distance, 0)
+					'W' -> wayPointLocation += Pair(-distance, 0)
+					'F' -> location += (wayPointLocation * distance)
+				}
 			}
 		}
 
-		fun distance() : Int {
-			return abs(myX) + abs(myY)
+		fun run() {
+			navigationInstractions.forEach { step(it) }
 		}
 
+		fun distance() = location.abs()
 	}
 
 	private fun solve1(totalFile: String) {
@@ -82,6 +130,9 @@ class Aoc2020ApplicationDay12 : CommandLineRunner {
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay12::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines {
+			val waypointNavigationState = WaypointNavigationState(it.toMutableList())
+			waypointNavigationState.run()
+			logger.info("${waypointNavigationState.distance()} is the Manhattan distance between that location and the ship's starting position")
 		}
 	}
 
