@@ -25,8 +25,32 @@ class Aoc2020ApplicationDay15 : CommandLineRunner {
 		while (turn <= 2020) {
 			val timesSpokenBefore = spokenNumbers[spoken]!!.filter { it != (turn - 1) }
 			spoken = if (timesSpokenBefore.isEmpty()) 0
-			         else (turn - 1) - timesSpokenBefore.max()!!
+			else (turn - 1) - timesSpokenBefore.max()!!
 			spokenNumbers[spoken] = spokenNumbers.getOrDefault(spoken, emptySet()).plus(turn)
+			turn++
+		}
+		return spoken
+	}
+
+	private fun playQuick(numbers: List<Int>) : Int {
+		val spoken2turn = HashMap<Int, Int>() // Times, Turn
+		var turn  = 1
+		var spoken = -1
+		numbers.forEach {
+			if (turn > 1) {
+				spoken2turn[spoken] = turn - 1
+			}
+			spoken = it
+			turn++
+		}
+		while (turn <= 30000000) {
+			val spoken_ = if (spoken2turn.containsKey(spoken)) {
+				            (turn - 1) - spoken2turn[spoken]!!
+			              } else {
+			               	0
+						  }
+			spoken2turn[spoken] = turn - 1
+			spoken = spoken_
 			turn++
 		}
 		return spoken
@@ -44,7 +68,10 @@ class Aoc2020ApplicationDay15 : CommandLineRunner {
 	
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay15::class.java.getResourceAsStream("/$totalFile")))
-		bufferedReader.useLines {
+		bufferedReader.useLines { input ->
+			input.forEach { line ->
+				logger.info("${playQuick(line.split(",").map { it.toInt() })} will be the 30000000th number spoken")
+			}
 		}
 	}
 
