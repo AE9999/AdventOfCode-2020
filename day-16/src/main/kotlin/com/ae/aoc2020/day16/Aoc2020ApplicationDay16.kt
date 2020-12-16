@@ -6,8 +6,10 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.RuntimeException
 import java.util.*
 import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 
 @SpringBootApplication
@@ -22,11 +24,24 @@ class Aoc2020ApplicationDay16 : CommandLineRunner {
 			options.forEach { option ->  if (value in option ) return true }
 			return false
 		}
+
+		fun fitsAttribute(values: List<Int>): Boolean {
+			return values.filter { value -> options.filter {  option -> value in option }.isNotEmpty() }.size == values.size
+		}
 	}
 
-	class Station(val attibutes: List<Attribute>,
-	              val myTicket: Ticket,
-	              val nearbyTickets: List<Ticket>) {
+	inner class Station(val attibutes: List<Attribute>,
+	                    val myTicket: Ticket,
+	                    val nearbyTickets: List<Ticket>) {
+
+		private val validTickets: List<Ticket>
+
+		init {
+			validTickets = nearbyTickets.filter {
+				ticket ->
+				ticket.ints.filter { value -> validAttrributes(value).isEmpty()  }.isEmpty()
+			}
+		}
 
 		fun validAttrributes(value: Int) : List<Attribute> {
 			return attibutes.filter { attribute -> attribute.hasValidOption(value) }
@@ -43,6 +58,36 @@ class Aoc2020ApplicationDay16 : CommandLineRunner {
 				}
 			}
 			return invalidValues
+		}
+
+		private fun valuesOfColumn(column: Int) : List<Int> = validTickets.map { it.ints[column] }
+
+		private  fun ticketSize() = myTicket.ints.size
+
+		fun doMatchingStuff() : Long {
+			val column2attribute = HashMap<Attribute, Int>()
+			val currentState = (0 until ticketSize()).map {
+				Pair(it, attibutes.filter { attribute -> attribute.fitsAttribute(valuesOfColumn(it) ) })
+			}.toMap().toMutableMap()
+
+			while(currentState.isNotEmpty()) {
+				val foundNecessities = currentState.filter { it.value.size == 1 }
+				if (foundNecessities.isEmpty()) throw RuntimeException("Logic failure")
+				foundNecessities.forEach {
+					val value = it.value.first()
+					column2attribute[value] = it.key
+					currentState.remove(it.key)
+					currentState.keys.forEach {
+						currentState[it] = currentState[it]!!.minus(value)
+					}
+				}
+			}
+
+			val departureColumns = column2attribute.filter { it.key.name.startsWith("departure") }
+
+			return if (departureColumns.isEmpty()) 0
+			       else departureColumns.map { myTicket.ints[it.value].toLong() }
+					                    .reduce(Long::times)
 		}
 	}
 
@@ -82,11 +127,13 @@ class Aoc2020ApplicationDay16 : CommandLineRunner {
 	private fun solve2(totalFile: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay16::class.java.getResourceAsStream("/$totalFile")))
 		bufferedReader.useLines { input ->
+			val station = parseStation(input.toList())
+			logger.info("${station.doMatchingStuff()} do you get if you multiply those six values together")
 		}
 	}
 
 	override fun run(vararg args: String?) {
-		solve1(args[0]!!) // 15063 too low
+		solve1(args[0]!!)
 		solve2(args[0]!!)
 	}
 }
