@@ -53,7 +53,6 @@ class Aoc2020ApplicationDay17 : CommandLineRunner {
 			}
 			return seq.toSet()
 		}
-
 	}
 
 	inner class HyperCubeConwayCubeSystem<T>(var activeCubes: Set<Manhattan<T>>) {
