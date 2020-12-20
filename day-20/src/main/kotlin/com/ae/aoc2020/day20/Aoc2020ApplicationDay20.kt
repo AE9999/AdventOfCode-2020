@@ -43,7 +43,7 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 		}
 
 		private fun rotate(degree: Int) : Tile {
-			val target = (0..9).map { CharArray(10) }.toList()
+			val target = (0 until width()).map { CharArray(width()) }.toList()
 			image.withIndex().forEach { y ->
 				y.value.withIndex().forEach { x ->
 					val offset = width() / 2
@@ -61,7 +61,7 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 		}
 
 		private fun flipped(flip: Flip) : Tile {
-			val target = (0..9).map {  CharArray(10) }.toList()
+			val target = (0 until width()).map {  CharArray(width()) }.toList()
 			image.withIndex().forEach { y ->
 				y.value.withIndex().forEach { x ->
 					val offset = width() / 2
@@ -159,7 +159,49 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 		return null
 	}
 
-	private fun solve1(file: String) {
+	fun countSeamonsters(charArrays: List<String>) : Int {
+		val line0 = "..................#."
+		val line1 = "#....##....##....###"
+		val line2 = ".#..#..#..#..#..#..."
+
+		val line0matches = listOf(18)
+		val line1matches = listOf(0,5,6,11,12,17,18,19)
+		val line2matches = listOf(1,4,8,10,14,17)
+
+		val reg0 = Regex(line0)
+		val reg1 = Regex(line1)
+		val reg2 = Regex(line2)
+
+		val myLengt = line0.length
+		val maxPos =  charArrays[0]!!.length - line0.length
+		val partOfSeaMonstor = HashSet<Pair<Int,Int>>()
+		(0 until (charArrays.size - 2)).forEach { y ->
+			(0 until maxPos).forEach { x ->
+				val subline0 = charArrays[y].drop(x).take(myLengt)
+				val subline1 = charArrays[y + 1].drop(x).take(myLengt)
+				val subline2 = charArrays[y + 2].drop(x).take(myLengt)
+
+				if (reg0.matches(subline0)
+					&& reg1.matches(subline1)
+					&& reg2.matches(subline2)) {
+					line0matches.map { offset ->
+						partOfSeaMonstor.add(Pair(x + offset, y))
+					}
+					line1matches.map { offset ->
+						partOfSeaMonstor.add(Pair(x + offset, y + 1))
+					}
+					line2matches.map { offset ->
+						partOfSeaMonstor.add(Pair(x + offset, y + 2))
+					}
+				}
+			}
+		}
+		return charArrays.map { line ->
+			line.filter { char -> char == '#' }.length
+		}.sum() - partOfSeaMonstor.size
+	}
+
+	private fun solve(file: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay20::class.java.getResourceAsStream("/$file")))
 		bufferedReader.useLines { input ->
 			val tiles = input.chunked(12).map { parseTile(it) }.toSet().shuffled()
@@ -189,19 +231,27 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 			                   currentPlacements[Placement(size,size)]!!).map { it.first.id }.reduce(Long::times)
 			logger.info("$anwer do you get if you multiply together the IDs of the four corner tiles")
 
-		}
-	}
+			val finalImage = ArrayList<CharArray>()
+			(0..size).forEach { y ->
+				(1..8).forEach { i ->
+					val r  = (0..size).map { x ->
+						currentPlacements[Placement(x,y)]!!.first.image[i].drop(1).dropLast(1).toCharArray()
+					}.reduce { acc, chars -> acc + chars }
+					finalImage.add(r)
+				}
+			}
 
-	private fun solve2(file: String) {
-		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay20::class.java.getResourceAsStream("/$file")))
-		bufferedReader.useLines { input ->
+			val finalTile = Tile(0, finalImage)
+			val seaMonsters = possibleConfigurations.map { config ->
+				countSeamonsters(finalTile.fromConfig(config).image.map { it.joinToString("") })
+			}
+			logger.info("${seaMonsters.min()!!} are not part of a sea monster");
 
 		}
 	}
 
 	override fun run(vararg args: String?) {
-		solve1(args[0]!!)
-		solve2(args[0]!!)
+		solve(args[0]!!)
 	}
 }
 
