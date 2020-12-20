@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import java.lang.RuntimeException
 import kotlin.math.cos
 import kotlin.math.log
 import kotlin.math.sin
@@ -53,7 +54,6 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 
 					val x_ =  (r.first + offset).toInt()
 					val y_ = (r.second + offset).toInt()
-
 					target[y_][x_] = image[y.index][x.index]
 				}
 			}
@@ -130,7 +130,7 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 		return true
 	}
 
-	private fun solveH(tiles: Set<Tile>,
+	private fun solveH(tiles: List<Tile>,
 					   possibleConfigurations: Set<Configuration>,
 					   currentPlacements: Map<Placement, Pair<Tile, Configuration>>,
 					   placementsToDo: List<Placement>) : Map<Placement, Pair<Tile, Configuration>>? {
@@ -162,17 +162,19 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 	private fun solve1(file: String) {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay20::class.java.getResourceAsStream("/$file")))
 		bufferedReader.useLines { input ->
-			val tiles = input.chunked(12).map { parseTile(it) }.toSet()
+			val tiles = input.chunked(12).map { parseTile(it) }.toSet().shuffled()
+			val size = Math.sqrt(tiles.size.toDouble()).toInt() -1
+			logger.info("Working with a square of size ${size} .. ")
 			val placementsToDo = sequence {
-				(0..2).forEach { y ->
-					(0..2).forEach { x->
+				(0..size).forEach { y ->
+					(0..size).forEach { x->
 						yield(Placement(x,y))
 					}
 				}
 			}.toList()
 			val possibleConfigurations = sequence {
 				degrees.forEach { degree ->
-					Flip.values().forEach { flip ->
+					listOf(Flip.NONE, Flip.HORIZONTAL).forEach { flip ->
 						yield(Configuration(degree, flip))
 					}
 				}
@@ -182,41 +184,9 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 					                       HashMap(),
 					                       placementsToDo)!!
 			val anwer = listOf(currentPlacements[Placement(0,0)]!!,
-			                   currentPlacements[Placement(2,0)]!!,
-			                   currentPlacements[Placement(0,2)]!!,
-			                   currentPlacements[Placement(2,2)]!!).map { it.first.id }.reduce(Long::times)
-
-			logger.info("Sollution: ")
-			(0..2).forEach { y ->
-				val col1 = "(${currentPlacements[Placement(0,y)]!!.first.id}, (${currentPlacements[Placement(0,y)]!!.second}))"
-				val col2 = "(${currentPlacements[Placement(1,y)]!!.first.id}, (${currentPlacements[Placement(1,y)]!!.second}))"
-				val col3 = "(${currentPlacements[Placement(2,y)]!!.first.id}, (${currentPlacements[Placement(2,y)]!!.second}))"
-				System.out.println("$col1 $col2 $col3")
-			}
-
-			(0..2).forEach { y ->
-				(0..9).forEach { line ->
-					val col1 = currentPlacements[Placement(0,y)]!!.first.image[line].joinToString("")
-					val col2 = currentPlacements[Placement(1,y)]!!.first.image[line].joinToString("")
-					val col3 = currentPlacements[Placement(2,y)]!!.first.image[line].joinToString("")
-					System.out.println("$col1 $col2 $col3")
-				}
-				System.out.println("")
-			}
-
-			currentPlacements.forEach { sol ->
-				System.out.println("${sol.value.first.id}: -> ${sol.value.second}")
-				val original = tiles.firstOrNull { tile -> tile.id == sol.value.first.id }!!
-				(0..9).forEach { line ->
-					val origin = original.image[line].joinToString("")
-					val sollution = sol.value.first.image[line].joinToString("")
-					System.out.println("$origin $sollution")
-				}
-				System.out.println("")
-			}
-
-
-			// To High 140400418109491
+			                   currentPlacements[Placement(size,0)]!!,
+			                   currentPlacements[Placement(0,size)]!!,
+			                   currentPlacements[Placement(size,size)]!!).map { it.first.id }.reduce(Long::times)
 			logger.info("$anwer do you get if you multiply together the IDs of the four corner tiles")
 
 		}
