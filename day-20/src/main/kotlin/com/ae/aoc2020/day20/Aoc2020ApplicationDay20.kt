@@ -7,6 +7,7 @@ import org.springframework.boot.runApplication
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import kotlin.math.cos
+import kotlin.math.log
 import kotlin.math.sin
 
 @SpringBootApplication
@@ -115,15 +116,15 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 			return false
 		}
 		if (currentPlacements.containsKey(placment.right())
-			&& !tile.edge(Edge.RIGHT).contentEquals(currentPlacements[placment.left()]!!.first.edge(Edge.LEFT))) {
+			&& !tile.edge(Edge.RIGHT).contentEquals(currentPlacements[placment.right()]!!.first.edge(Edge.LEFT))) {
 			return false
 		}
 		if (currentPlacements.containsKey(placment.top())
-			&& !tile.edge(Edge.TOP).contentEquals(currentPlacements[placment.left()]!!.first.edge(Edge.BOTTOM)))  {
+			&& !tile.edge(Edge.TOP).contentEquals(currentPlacements[placment.top()]!!.first.edge(Edge.BOTTOM)))  {
 			return false
 		}
 		if (currentPlacements.containsKey(placment.bottom())
-			&& !tile.edge(Edge.BOTTOM).contentEquals(currentPlacements[placment.left()]!!.first.edge(Edge.TOP)))  {
+			&& !tile.edge(Edge.BOTTOM).contentEquals(currentPlacements[placment.bottom()]!!.first.edge(Edge.TOP)))  {
 			return false
 		}
 		return true
@@ -133,7 +134,6 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 					   possibleConfigurations: Set<Configuration>,
 					   currentPlacements: Map<Placement, Pair<Tile, Configuration>>,
 					   placementsToDo: List<Placement>) : Map<Placement, Pair<Tile, Configuration>>? {
-		logger.info("Trying with ${tiles.size} ..")
 		val placement = placementsToDo.first()!!
 		tiles.forEach { tile ->
 			possibleConfigurations.forEach lit@{ configuration ->
@@ -185,6 +185,38 @@ class Aoc2020ApplicationDay20 : CommandLineRunner {
 			                   currentPlacements[Placement(2,0)]!!,
 			                   currentPlacements[Placement(0,2)]!!,
 			                   currentPlacements[Placement(2,2)]!!).map { it.first.id }.reduce(Long::times)
+
+			logger.info("Sollution: ")
+			(0..2).forEach { y ->
+				val col1 = "(${currentPlacements[Placement(0,y)]!!.first.id}, (${currentPlacements[Placement(0,y)]!!.second}))"
+				val col2 = "(${currentPlacements[Placement(1,y)]!!.first.id}, (${currentPlacements[Placement(1,y)]!!.second}))"
+				val col3 = "(${currentPlacements[Placement(2,y)]!!.first.id}, (${currentPlacements[Placement(2,y)]!!.second}))"
+				System.out.println("$col1 $col2 $col3")
+			}
+
+			(0..2).forEach { y ->
+				(0..9).forEach { line ->
+					val col1 = currentPlacements[Placement(0,y)]!!.first.image[line].joinToString("")
+					val col2 = currentPlacements[Placement(1,y)]!!.first.image[line].joinToString("")
+					val col3 = currentPlacements[Placement(2,y)]!!.first.image[line].joinToString("")
+					System.out.println("$col1 $col2 $col3")
+				}
+				System.out.println("")
+			}
+
+			currentPlacements.forEach { sol ->
+				System.out.println("${sol.value.first.id}: -> ${sol.value.second}")
+				val original = tiles.firstOrNull { tile -> tile.id == sol.value.first.id }!!
+				(0..9).forEach { line ->
+					val origin = original.image[line].joinToString("")
+					val sollution = sol.value.first.image[line].joinToString("")
+					System.out.println("$origin $sollution")
+				}
+				System.out.println("")
+			}
+
+
+			// To High 140400418109491
 			logger.info("$anwer do you get if you multiply together the IDs of the four corner tiles")
 
 		}
