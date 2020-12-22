@@ -54,12 +54,14 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 
 		while (decks.filter { deck -> deck.isEmpty() }.isEmpty()) {
 			val state = Pair(decks[0].toIntArray(), decks[1].toIntArray())
-			if (seenStates.contains(state)) {
+			val state_ = Pair(decks[0].toIntArray(), decks[1].toIntArray())
+			if (seenStates.contains(state) || seenStates.contains(state_)) {
 				return Pair(true, deckToScore(decks[0]))
 			}
+
 			seenStates.add(state)
-			if (((seenStates.size + 1) % 10000)  == 0) {
-				logger.info("${seenStates.size} ..")
+			if (((seenStates.size + 1) % 10000 == 0)) {
+				logger.info("${seenStates.size} -> ${state.show()} ..")
 			}
 			val cards = listOf(decks[0].pop(), decks[1].pop())
 			val player1wins = if (cards[0] <= decks[0].size
@@ -99,6 +101,10 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 //		solve(args[0]!!)
 		solve2(args[0]!!)
 	}
+}
+
+private fun Pair<IntArray, IntArray>.show(): String {
+	return "[${first.joinToString(",")}] [${second.joinToString(",")}]"
 }
 
 fun main(args: Array<String>) {
