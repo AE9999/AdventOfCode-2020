@@ -8,6 +8,7 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.lang.RuntimeException
 import java.util.*
+import kotlin.collections.HashMap
 import kotlin.collections.HashSet
 import kotlin.math.log
 
@@ -15,6 +16,8 @@ import kotlin.math.log
 class Aoc2020ApplicationDay22 : CommandLineRunner {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
+
+	val seenCalls = HashMap<DeckState, Boolean>()
 
 	private fun parseDecks(input: Sequence<String>): List<ArrayDeque<Int>> {
 		val bufferedInput = input.toList().drop(1)
@@ -52,8 +55,12 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 	                     val right: IntArray) {
 		var hashCode: Int
 
+		val primes = listOf(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47, 53, 59, 61, 67, 71, 73, 79, 83, 89, 97, 101, 103, 107, 109, 113, 127, 131, 137, 139, 149, 151, 157, 163, 167, 173, 179, 181, 191, 193, 197, 199, 211, 223, 227, 229, 233)
+
 		init {
-			hashCode = left.reduce(Int::times) + left.reduce(Int::times)
+			val leftHash = left.withIndex().map { primes[it.value] * it.index  }.reduce(Int::times)
+			val rightHash = right.withIndex().map { primes[it.value] * it.index  }.reduce(Int::times)
+			hashCode = leftHash + rightHash
 		}
 
 		fun show() = "[${left.joinToString(",")}] [${right.joinToString(",")}]"
@@ -83,24 +90,31 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 		}
 	}
 
-	private fun solve2H(decks: List<ArrayDeque<Int>>) : Pair<Boolean, Int> {
-
+	private fun solve2H(decks: List<ArrayDeque<Int>>, depth: Int) : Pair<Boolean, Int> {
+		logger.info("At ($depth) Working with ${DeckState(decks[0].toIntArray(), decks[1].toIntArray()).show()}")
 		val seenStates = HashSet<DeckState>()
 
 		while (decks.filter { deck -> deck.isEmpty() }.isEmpty()) {
 			val state = DeckState(decks[0].toIntArray(), decks[1].toIntArray())
 			if (seenStates.contains(state)) {
+//				logger.info("Stalemate reached at ${seenStates.size	}..")
 				return Pair(true, deckToScore(decks[0]))
 			}
 			seenStates.add(state)
 			val cards = listOf(decks[0].pop(), decks[1].pop())
-			val player1wins = if (cards[0] <= decks[0].size
-				&& cards[1] <= decks[1].size) {
+			val player1wins = if (cards[0] <= decks[0].size && cards[1] <= decks[1].size) {
 				val decks_ : List<ArrayDeque<Int>> = listOf(ArrayDeque(), ArrayDeque())
 				decks_[0].addAll(decks[0])
 				decks_[1].addAll(decks[1])
-				solve2H(decks_).first
+
+				val callId = DeckState(decks_[0].toIntArray(), decks_[1].toIntArray())
+
+				if (!seenCalls.containsKey(callId)) {
+					seenCalls[callId] = solve2H(decks_, depth + 1).first
+				}
+				seenCalls[callId]!!
 			} else {
+//				logger.info("moving on at ($depth)..")
 				(cards[0] > cards[1])
 			}
 
@@ -114,6 +128,7 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 		}
 		val winningDeck = if (decks[0].isEmpty()) decks[1] else decks[0]
 		val score = deckToScore(winningDeck)
+//		logger.info("Returning @ ${seenStates.size	}..")
 		return Pair(decks[0].isNotEmpty(), score)
 	}
 
@@ -121,7 +136,7 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay22::class.java.getResourceAsStream("/$file")))
 		bufferedReader.useLines { input ->
 			val decks = parseDecks(input)
-			val score = solve2H(decks)
+			val score = solve2H(decks, 0)
 			logger.info("${score.second} is the winning player's score")
 		}
 	}
