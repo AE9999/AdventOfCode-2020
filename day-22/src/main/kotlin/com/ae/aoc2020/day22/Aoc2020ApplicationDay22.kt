@@ -48,21 +48,51 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 	private fun deckToScore(deck: ArrayDeque<Int>) : Int =
 		deck.withIndex().map { card -> (deck.size - card.index) * card.value }.sum()
 
+	data class DeckState(val left: IntArray,
+	                     val right: IntArray) {
+		var hashCode: Int
+
+		init {
+			hashCode = left.reduce(Int::times) + left.reduce(Int::times)
+		}
+
+		fun show() = "[${left.joinToString(",")}] [${right.joinToString(",")}]"
+
+		override fun hashCode(): Int {
+			return hashCode
+		}
+
+		override fun equals(other: Any?): Boolean {
+			if (other is DeckState) {
+				if( other.left.size != left.size || other.right.size != right.size) {
+					return false
+				}
+				left.withIndex().forEach {
+					if (it.value != other.left[it.index]) {
+						return false
+					}
+				}
+				right.withIndex().forEach {
+					if (it.value != other.right[it.index]) {
+						return false
+					}
+				}
+				return true
+			}
+			return super.equals(other)
+		}
+	}
+
 	private fun solve2H(decks: List<ArrayDeque<Int>>) : Pair<Boolean, Int> {
 
-		val seenStates = HashSet<Pair<IntArray, IntArray>>()
+		val seenStates = HashSet<DeckState>()
 
 		while (decks.filter { deck -> deck.isEmpty() }.isEmpty()) {
-			val state = Pair(decks[0].toIntArray(), decks[1].toIntArray())
-			val state_ = Pair(decks[0].toIntArray(), decks[1].toIntArray())
-			if (seenStates.contains(state) || seenStates.contains(state_)) {
+			val state = DeckState(decks[0].toIntArray(), decks[1].toIntArray())
+			if (seenStates.contains(state)) {
 				return Pair(true, deckToScore(decks[0]))
 			}
-
 			seenStates.add(state)
-			if (((seenStates.size + 1) % 10000 == 0)) {
-				logger.info("${seenStates.size} -> ${state.show()} ..")
-			}
 			val cards = listOf(decks[0].pop(), decks[1].pop())
 			val player1wins = if (cards[0] <= decks[0].size
 				&& cards[1] <= decks[1].size) {
@@ -103,9 +133,6 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 	}
 }
 
-private fun Pair<IntArray, IntArray>.show(): String {
-	return "[${first.joinToString(",")}] [${second.joinToString(",")}]"
-}
 
 fun main(args: Array<String>) {
 	runApplication<Aoc2020ApplicationDay22>(*args)
