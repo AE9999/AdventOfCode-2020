@@ -17,7 +17,7 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 
 	private val logger = LoggerFactory.getLogger(javaClass)
 
-	val seenCalls = HashMap<DeckState, Boolean>()
+	val seenCalls = (0..50).map { HashMap<DeckState, Boolean>() }.toList()
 
 	private fun parseDecks(input: Sequence<String>): List<ArrayDeque<Int>> {
 		val bufferedInput = input.toList().drop(1)
@@ -91,13 +91,14 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 	}
 
 	private fun solve2H(decks: List<ArrayDeque<Int>>, depth: Int) : Pair<Boolean, Int> {
-		logger.info("At ($depth) Working with ${DeckState(decks[0].toIntArray(), decks[1].toIntArray()).show()}")
+//		logger.info("At ($depth) Working with	 ${DeckState(decks[0].toIntArray(), decks[1].toIntArray()).show()}")
 		val seenStates = HashSet<DeckState>()
 
 		while (decks.filter { deck -> deck.isEmpty() }.isEmpty()) {
 			val state = DeckState(decks[0].toIntArray(), decks[1].toIntArray())
+//			logger.info("At ($depth) Working wit ${state.show()}")
 			if (seenStates.contains(state)) {
-//				logger.info("Stalemate reached at ${seenStates.size	}..")
+//				logger.info("Found a stalmate at ${seenStates.size} ..")
 				return Pair(true, deckToScore(decks[0]))
 			}
 			seenStates.add(state)
@@ -109,12 +110,14 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 
 				val callId = DeckState(decks_[0].toIntArray(), decks_[1].toIntArray())
 
-				if (!seenCalls.containsKey(callId)) {
-					seenCalls[callId] = solve2H(decks_, depth + 1).first
+				if (!seenCalls[depth].containsKey(callId)) {
+//					logger.info("${callId.show()} is a new call at ${depth} ..")
+					seenCalls[depth][callId] = solve2H(decks_, depth + 1).first
+				} else {
+//					logger.info("Found a premade call at ${seenCalls[depth].size} ..")
 				}
-				seenCalls[callId]!!
+				seenCalls[depth][callId]!!
 			} else {
-//				logger.info("moving on at ($depth)..")
 				(cards[0] > cards[1])
 			}
 
@@ -128,7 +131,6 @@ class Aoc2020ApplicationDay22 : CommandLineRunner {
 		}
 		val winningDeck = if (decks[0].isEmpty()) decks[1] else decks[0]
 		val score = deckToScore(winningDeck)
-//		logger.info("Returning @ ${seenStates.size	}..")
 		return Pair(decks[0].isNotEmpty(), score)
 	}
 
