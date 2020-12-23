@@ -95,8 +95,8 @@ class Aoc2020ApplicationDay23 : CommandLineRunner {
 			val line = input.first().toCharArray()
 
 			var pCupNode: CupNode? = null
-			val id2Node = HashMap<Int, CupNode>()
-			val maxId = 10000000
+			val maxId =  1000000
+			val id2Node = Array<CupNode?>(maxId + 1) { null }
 
 			(1 .. maxId).forEach { cupIndex ->
 				val cupId =  if ((cupIndex - 1) < line.size) line[(cupIndex - 1)].toString().toInt() else cupIndex
@@ -105,25 +105,20 @@ class Aoc2020ApplicationDay23 : CommandLineRunner {
 					pCupNode!!.nextCup = nextNode
 				}
 				pCupNode = nextNode
-				id2Node[cupIndex] = nextNode
+				id2Node[cupId] = nextNode
 			}
 
 			var selectedCupNode = id2Node[line[0].toString().toInt()]!!
 
-			pCupNode!!.nextCup = selectedCupNode // completing the circl
-			          8580000
-			(0 until 10000000).forEach {
-				if (it % 10000 == 0) {
-					logger.info("Making move $it ..")
-				}
+			pCupNode!!.nextCup = selectedCupNode
 
+			(0 until 10000000).forEach {
 				val pickedUp = selectedCupNode.removeNext(3)
 
 				val forbiddenIds = pickedUp.map { it.id } + listOf(selectedCupNode.id)
 				var destinationId =  if (selectedCupNode.id > 1) selectedCupNode.id - 1 else maxId
-				while (forbiddenIds.contains(destinationId)
-					   || destinationId == selectedCupNode.id) {
-					destinationId =  if (selectedCupNode.id > 1) selectedCupNode.id - 1 else maxId
+				while (forbiddenIds.contains(destinationId)) {
+					destinationId =  if (destinationId > 1) destinationId - 1 else maxId
 				}
 
 				val destination =  id2Node[destinationId]!!
@@ -132,6 +127,7 @@ class Aoc2020ApplicationDay23 : CommandLineRunner {
 			}
 
 			val cup1 = id2Node[1]!!
+
 			val l = cup1.nextCup!!.id.toLong()
 			val r = cup1.nextCup!!.nextCup!!.id.toLong()
 
@@ -140,7 +136,7 @@ class Aoc2020ApplicationDay23 : CommandLineRunner {
 	}
 
 	override fun run(vararg args: String?) {
-//			solve(args[0]!!)
+		solve(args[0]!!)
 		solve2(args[0]!!)
 	}
 }
