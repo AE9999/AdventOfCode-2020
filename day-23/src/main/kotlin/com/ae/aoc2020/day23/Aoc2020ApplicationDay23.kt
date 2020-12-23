@@ -6,6 +6,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.runApplication
 import java.io.BufferedReader
 import java.io.InputStreamReader
+import kotlin.math.log
 
 @SpringBootApplication
 class Aoc2020ApplicationDay23 : CommandLineRunner {
@@ -88,8 +89,59 @@ class Aoc2020ApplicationDay23 : CommandLineRunner {
 		}
 	}
 
+	private fun solve2(file: String) {
+		val bufferedReader = BufferedReader(InputStreamReader(Aoc2020ApplicationDay23::class.java.getResourceAsStream("/$file")))
+		bufferedReader.useLines { input ->
+			val line = input.first().toCharArray()
+
+			var pCupNode: CupNode? = null
+			val id2Node = HashMap<Int, CupNode>()
+			val maxId = 10000000
+
+			(1 .. maxId).forEach { cupIndex ->
+				val cupId =  if ((cupIndex - 1) < line.size) line[(cupIndex - 1)].toString().toInt() else cupIndex
+				val nextNode = CupNode(cupId, null)
+				if (pCupNode != null) {
+					pCupNode!!.nextCup = nextNode
+				}
+				pCupNode = nextNode
+				id2Node[cupIndex] = nextNode
+			}
+
+			var selectedCupNode = id2Node[line[0].toString().toInt()]!!
+
+			pCupNode!!.nextCup = selectedCupNode // completing the circl
+			          8580000
+			(0 until 10000000).forEach {
+				if (it % 10000 == 0) {
+					logger.info("Making move $it ..")
+				}
+
+				val pickedUp = selectedCupNode.removeNext(3)
+
+				val forbiddenIds = pickedUp.map { it.id } + listOf(selectedCupNode.id)
+				var destinationId =  if (selectedCupNode.id > 1) selectedCupNode.id - 1 else maxId
+				while (forbiddenIds.contains(destinationId)
+					   || destinationId == selectedCupNode.id) {
+					destinationId =  if (selectedCupNode.id > 1) selectedCupNode.id - 1 else maxId
+				}
+
+				val destination =  id2Node[destinationId]!!
+				destination.insertNext(pickedUp)
+				selectedCupNode = selectedCupNode.next()
+			}
+
+			val cup1 = id2Node[1]!!
+			val l = cup1.nextCup!!.id.toLong()
+			val r = cup1.nextCup!!.nextCup!!.id.toLong()
+
+			logger.info("After multiplying $l and $r I get ${l * r} ..")
+		}
+	}
+
 	override fun run(vararg args: String?) {
-			solve(args[0]!!)
+//			solve(args[0]!!)
+		solve2(args[0]!!)
 	}
 }
 
